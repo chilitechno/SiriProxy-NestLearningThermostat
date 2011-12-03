@@ -22,8 +22,8 @@ Say things like:
 
 Background
 ----------
-Connected my iPhone to a Paros proxy running on my mac (http://www.parosproxy.org/)
-I then ran the nest.com to analyze the app request/response interactions. 
+Connected my iPhone to a Paros proxy running on my mac (http://www.parosproxy.org/).
+I then ran the nest iPhone app to analyze the request/response interactions. 
 
 My HVAC setup is a single-stage heating (Rc,W) so if you have heating/cooling combination or other factors, the responses from nest.com maybe a little different and would have to be modified slightly: Namely to send an appropriate command to toggle between heat/cool/fan etc.
 The only option I had using the nest app was to send a target temperature, not an HVAC mode such as heat/cool/fan.
