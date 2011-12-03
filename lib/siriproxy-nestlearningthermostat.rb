@@ -1,7 +1,6 @@
 require 'rubygems'
 require 'httparty'
 require 'json'
-#require 'addressable/uri'
 
 class SiriProxy::Plugin::NestLearningThermostat < SiriProxy::Plugin
     attr_accessor :nest_email
@@ -137,8 +136,7 @@ class SiriProxy::Plugin::NestLearningThermostat < SiriProxy::Plugin
     def show_temperature
         say "Checking the inside temperature."
         
-        Thread.new {
-            
+        Thread.new {            
             request_completed #always complete your request! Otherwise the phone will "spin" at the user!
         }
     end
