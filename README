@@ -13,7 +13,8 @@ Copy config-info.yml into ~/.siriproxy/config.yml and edit as appropriate.
 
 Caveats:
 
-Currently only works with a single nest thermostat. I don't have multiple thermostats installed so it's hard to test, but should be relatively easy to adapt.
+* Currently only works with a single nest thermostat. I don't have multiple thermostats installed so it's hard to test, but should be relatively easy to adapt.
+* I tried getting Siri to understand 'Check the status of the Nest' but it kept saying it couldn't look up flight information. 
 
 To Do:
 
