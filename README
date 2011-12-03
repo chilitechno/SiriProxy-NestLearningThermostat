@@ -3,7 +3,9 @@ SiriProxy-NestLearningThermostat
 About:
 
 Plugin for SiriProxy to communicate with the Nest.com servers to set thermostat temperature or get the status of the thermostat.
-This plugin was adapter from SiriProxy-Thermostat plugin to call into nest.com.
+This plugin requires a nest.com account and Nest hardware from http://www.nest.com/
+
+This plugin was adapted from SiriProxy-Thermostat plugin to call into nest.com.
 
 Config:
 
