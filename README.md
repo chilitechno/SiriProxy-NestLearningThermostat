@@ -20,6 +20,12 @@ Say things like:
 * 'What's the status of the nest'
 * 'What is the status of the thermostat'
 
+Examples
+-------
+
+* https://twitter.com/#!/the_chilitechno/status/142988344941486080/photo/1
+* https://twitter.com/#!/the_chilitechno/status/143031527821938688/photo/1
+
 Caveats
 -------
 * Currently only works with a single nest thermostat. I don't have multiple thermostats installed so it's hard to test, but should be relatively easy to adapt.
