@@ -15,10 +15,10 @@ Usage
 -----
 Say things like:
 
-'Set the thermostat to 65 degrees'
-'Set the nest to 65'
-'What's the status of the nest'
-'What is the status of the thermostat'
+* 'Set the thermostat to 65 degrees'
+* 'Set the nest to 65'
+* 'What's the status of the nest'
+* 'What is the status of the thermostat'
 
 Caveats
 -------
