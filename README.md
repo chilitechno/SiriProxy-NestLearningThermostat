@@ -1,18 +1,18 @@
 SiriProxy-NestLearningThermostat
 ================================
-About:
-
+About
+-----
 Plugin for SiriProxy to communicate with the Nest.com servers to set thermostat temperature or get the status of the thermostat.
 This plugin requires a nest.com account and Nest hardware from http://www.nest.com/
 
 This plugin was adapted from SiriProxy-Thermostat plugin to call into nest.com.
 
-Config:
-
+Config
+------
 Copy config-info.yml into ~/.siriproxy/config.yml and edit as appropriate. 
 
-Usage:
-
+Usage
+-----
 Say things like:
 
 'Set the thermostat to 65 degrees'
@@ -20,13 +20,13 @@ Say things like:
 'What's the status of the nest'
 'What is the status of the thermostat'
 
-Caveats:
-
+Caveats
+-------
 * Currently only works with a single nest thermostat. I don't have multiple thermostats installed so it's hard to test, but should be relatively easy to adapt.
 * I tried getting Siri to understand 'Check the status of the Nest' but it kept saying it couldn't look up flight information. This seems to be sporadic because sometimes Siri reads 'Nest' as 'next'
 
-To Do:
-
+To Do
+-----
 * Caching of authentication token (currently logs into nest for each request)
 * Caching of device information 
 
