@@ -18,11 +18,7 @@ class SiriProxy::Plugin::NestLearningThermostat < SiriProxy::Plugin
     listen_for(/status.*nest/i) { show_status_of_thermostat }
     
     listen_for(/thermostat.*([0-9]{2})/i) { |temp| set_thermostat(temp) }
-    
-    listen_for(/temperature.*inside/i) { show_temperature }
-    listen_for(/inside.*temperature/i) { show_temperature }
-    listen_for(/temperature.*in here/i) { show_temperature }
-    
+        
     def show_status_of_thermostat
         say "Checking the status of the Nest."
         
@@ -133,11 +129,4 @@ class SiriProxy::Plugin::NestLearningThermostat < SiriProxy::Plugin
         }    
     end
     
-    def show_temperature
-        say "Checking the inside temperature."
-        
-        Thread.new {            
-            request_completed #always complete your request! Otherwise the phone will "spin" at the user!
-        }
-    end
 end
