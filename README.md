@@ -19,6 +19,9 @@ Say things like:
 * 'Set the nest to 65'
 * 'What's the status of the nest'
 * 'What is the status of the thermostat'
+* 'Set the nest to away'
+* 'Set the thermostat to away'
+* 'Let the nest know that I'm home'
 
 Background
 ----------
@@ -39,7 +42,7 @@ Caveats
 -------
 * Currently only works with a single nest thermostat. I don't have multiple thermostats installed so it's hard to test, but should be relatively easy to adapt.
 * I tried getting Siri to understand 'Check the status of the Nest' but it kept saying it couldn't look up flight information. This seems to be sporadic because sometimes Siri reads 'Nest' as 'next'
-* I developed this on my home HVAC system which only has single-stage heating (Rc, W) so you're mileage may vary if you have a different setup and you'll likely need to further analyze the nest iPhone app request/response stream.
+* I developed this on my home HVAC system which only has single-stage heating (Rc, W) so your mileage may vary if you have a different setup and you'll likely need to further analyze the nest iPhone app request/response stream.
 
 To Do
 -----

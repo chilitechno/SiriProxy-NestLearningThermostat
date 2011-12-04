@@ -17,42 +17,63 @@ class SiriProxy::Plugin::NestLearningThermostat < SiriProxy::Plugin
     listen_for(/nest.*status/i) { show_status_of_thermostat }
     listen_for(/status.*nest/i) { show_status_of_thermostat }
     
+    listen_for(/nest.*away/i) { set_thermostat_away_or_home('away') }
+    listen_for(/thermostat.*away/i) { set_thermostat_away_or_home('away') }
+
+    listen_for(/nest.*home/i) { set_thermostat_away_or_home('home')  }
+    listen_for(/thermostat.*home/i) { set_thermostat_away_or_home('home')  }
+    
     listen_for(/thermostat.*([0-9]{2})/i) { |temp| set_thermostat(temp) }
     listen_for(/nest.*([0-9]{2})/i) { |temp| set_thermostat(temp) }
+    
+    def login_to_nest
+        loginRequest = HTTParty.post('https://home.nest.com/user/login',:body => { :username => self.nest_email, :password => self.nest_password }, :headers => { 'User-Agent' => 'Nest/1.1.0.10 CFNetwork/548.0.4' })
+                
+        authResult = JSON.parse(loginRequest.body) rescue nil
+        if authResult
+           puts authResult 
+        end
+        return authResult        
+    end
+    
+    def get_nest_status(access_token, user_id, transport_url)
+        transport_host = transport_url.split('/')[2]
+        statusRequest = HTTParty.get(transport_url + '/v2/mobile/user.' + user_id, :headers => { 'Host' => transport_host, 'User-Agent' => 'Nest/1.1.0.10 CFNetwork/548.0.4','Authorization' => 'Basic ' + access_token, 'X-nl-user-id' => user_id, 'X-nl-protocol-version' => '1', 'Accept-Language' => 'en-us', 'Connection' => 'keep-alive', 'Accept' => '*/*'}) rescue nil
+        statusResult = JSON.parse(statusRequest.body) rescue nil
+        if statusResult
+           puts statusResult 
+        end
+        return statusResult
+    end
         
     def show_status_of_thermostat
         say "Checking the status of the Nest."
         
-        Thread.new {
-            # first request to login to nest
-            loginRequest = HTTParty.post('https://home.nest.com/user/login',:body => { :username => self.nest_email, :password => self.nest_password }, :headers => { 'User-Agent' => 'Nest/1.1.0.10 CFNetwork/548.0.4' })
-            
-            authResult = JSON.parse(loginRequest.body) rescue nil
-            
+        Thread.new {            
+            authResult = login_to_nest                        
             if authResult   
                 access_token = authResult["access_token"]
                 user_id = authResult["userid"]
                 transport_url = authResult["urls"]["transport_url"]
-                transport_host = transport_url.split('/')[2]
                 
-                # use access token to get response from nest in another request
-                statusRequest = HTTParty.get(transport_url + '/v2/mobile/user.' + user_id, :headers => { 'Host' => transport_host, 'User-Agent' => 'Nest/1.1.0.10 CFNetwork/548.0.4','Authorization' => 'Basic ' + access_token, 'X-nl-user-id' => user_id, 'X-nl-protocol-version' => '1', 'Accept-Language' => 'en-us', 'Connection' => 'keep-alive', 'Accept' => '*/*'}) rescue nil
-                # puts statusRequest.code
-                # puts statusRequest.body
-                statusResult = JSON.parse(statusRequest.body) rescue nil
+                statusResult = get_nest_status(access_token, user_id, transport_url)
                 
                 if statusResult
                     structure_id = statusResult["user"][user_id]["structures"][0].split('.')[1]
-                    device_serial_id = statusResult["structure"][structure_id]["devices"][0].split('.')[1]
-                    # devices element could contain multiple serial_numbers if multiple thermostats associated to nest account. 
-                    # serial number is something like 01AB23CD456789EF
-                    
-                    current_temp = (statusResult["shared"][device_serial_id]["current_temperature"] * 1.8) + 32
-                    current_temp = current_temp.round
-                    target_temp = (statusResult["shared"][device_serial_id]["target_temperature"] * 1.8) + 32
-                    target_temp = target_temp.round
-                    thermostat_name = statusResult["shared"][device_serial_id]["name"]
-                    say "The #{thermostat_name} Nest is currently set to #{target_temp} degrees. The current temperature is #{current_temp} degrees."
+                    if statusResult["structure"][structure_id]["away"]
+                        say "The Nest is currently set to away."
+                    else                    
+                        device_serial_id = statusResult["structure"][structure_id]["devices"][0].split('.')[1]
+                        # devices element could contain multiple serial_numbers if multiple thermostats associated to nest account. 
+                        # serial number is something like 01AB23CD456789EF
+                        
+                        current_temp = (statusResult["shared"][device_serial_id]["current_temperature"] * 1.8) + 32
+                        current_temp = current_temp.round
+                        target_temp = (statusResult["shared"][device_serial_id]["target_temperature"] * 1.8) + 32
+                        target_temp = target_temp.round
+                        thermostat_name = statusResult["shared"][device_serial_id]["name"]
+                        say "The #{thermostat_name} Nest is currently set to #{target_temp} degrees. The current temperature is #{current_temp} degrees."
+                    end
                 else
                     say "Sorry, I couldn't understand the response from Nest.com"
                 end
@@ -64,32 +85,60 @@ class SiriProxy::Plugin::NestLearningThermostat < SiriProxy::Plugin
         }
     end
     
+    def set_thermostat_away_or_home(home_away)
+        # away / home operate on structure IDs - presumably a structure is a collection of devices
+        say "One moment while I set the Nest to " + home_away + "."       
+        Thread.new {
+            authResult = login_to_nest                        
+            if authResult   
+                access_token = authResult["access_token"]
+                user_id = authResult["userid"]
+                transport_url = authResult["urls"]["transport_url"]
+                transport_host = transport_url.split('/')[2]
+                
+                statusResult = get_nest_status(access_token, user_id, transport_url)
+                
+                if statusResult
+                    structure_id = statusResult["user"][user_id]["structures"][0].split('.')[1]    
+                    time_since_epoch = Time.now.to_i
+                    payload = ''
+                    if home_away == 'away'
+                        payload = '{"away_timestamp":' + "#{time_since_epoch}" + ',"away":true,"away_setter":0}'
+                    else
+                        payload = '{"away_timestamp":' + "#{time_since_epoch}" + ',"away":false,"away_setter":0}'
+                    end
+                    begin
+                        awayRequest = HTTParty.post(transport_url + '/v2/put/structure.' + structure_id, :body => payload, :headers => { 'Host' => transport_host, 'User-Agent' => 'Nest/1.1.0.10 C.10 CFNetwork/548.0.4', 'Authorization' => 'Basic ' + access_token, 'X-nl-protocol-version' => '1'})
+                        puts awayRequest.body
+                    rescue
+                        puts 'error: ' 
+                    end                    
+                    
+                    if awayRequest.code == 200
+                        say "Ok, I set the Nest to " + home_away + "."                      
+                    else
+                        say "Sorry, I couldn't set the Nest to " + home_away + "."
+                    end                    
+                else
+                    say "Sorry, I couldn't understand the response from Nest.com"
+                end
+            end
+            request_completed #always complete your request! Otherwise the phone will "spin" at the user!
+        }    
+    end
+    
     def set_thermostat(temp)
         say "One moment while I set the Nest to #{temp} degrees."        
         Thread.new {
-            begin
-                loginRequest = HTTParty.post('https://home.nest.com/user/login',:body => { :username => self.nest_email, :password => self.nest_password }, :headers => { 'User-Agent' => 'Nest/1.1.0.10 CFNetwork/548.0.4' })
-            rescue
-                puts 'login error'
-            end
-            
-            authResult = JSON.parse(loginRequest.body) rescue nil
+            authResult = login_to_nest             
             
             if authResult   
                 access_token = authResult["access_token"]
                 user_id = authResult["userid"]
                 transport_url = authResult["urls"]["transport_url"]
                 transport_host = transport_url.split('/')[2]
-                puts transport_url
-                puts transport_host
-                puts user_id
-                puts access_token
                 
-                # use access token to get response from nest in another request
-                statusRequest = HTTParty.get(transport_url + '/v2/mobile/user.' + user_id, :headers => { 'Host' => transport_host, 'User-Agent' => 'Nest/1.1.0.10 CFNetwork/548.0.4','Authorization' => 'Basic ' + access_token, 'X-nl-user-id' => user_id, 'X-nl-protocol-version' => '1', 'Accept-Language' => 'en-us', 'Connection' => 'keep-alive', 'Accept' => '*/*'}) rescue nil
-                puts statusRequest.code
-                puts statusRequest.body
-                statusResult = JSON.parse(statusRequest.body) rescue nil
+                statusResult = get_nest_status(access_token, user_id, transport_url)
                 
                 if statusResult
                     structure_id = statusResult["user"][user_id]["structures"][0].split('.')[1]
