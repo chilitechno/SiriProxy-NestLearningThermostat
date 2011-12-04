@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'rubygems'
 require 'httparty'
 require 'json'
@@ -45,6 +47,21 @@ class SiriProxy::Plugin::NestLearningThermostat < SiriProxy::Plugin
         end
         return statusResult
     end
+    
+    # parse time_to_target (thanks to @supaflys)
+    def get_time_to_target(statusResult,device_serial_id)
+        ttt_string = nil
+        thetime = statusResult["shared"][device_serial_id]["$timestamp"]
+        time_to_target = statusResult["device"][device_serial_id]["time_to_target"]
+        if time_to_target
+            if time_to_target > 0
+                time_estimate = (time_to_target - (thetime/1000))/60
+                time_estimate = time_estimate.round
+                ttt_string = "#{time_estimate} minutes"
+            end
+        end
+        return ttt_string
+    end
         
     def show_status_of_thermostat
         say "Checking the status of the Nest."
@@ -67,12 +84,28 @@ class SiriProxy::Plugin::NestLearningThermostat < SiriProxy::Plugin
                         # devices element could contain multiple serial_numbers if multiple thermostats associated to nest account. 
                         # serial number is something like 01AB23CD456789EF
                         
-                        current_temp = (statusResult["shared"][device_serial_id]["current_temperature"] * 1.8) + 32
-                        current_temp = current_temp.round
-                        target_temp = (statusResult["shared"][device_serial_id]["target_temperature"] * 1.8) + 32
-                        target_temp = target_temp.round
+                        current_temp = statusResult["shared"][device_serial_id]["current_temperature"]
+                        target_temp = statusResult["shared"][device_serial_id]["target_temperature"]
+                        temperature_scale = statusResult["device"][device_serial_id]["temperature_scale"]
+                        
+                        if temperature_scale == "F"
+                            current_temp = (current_temp * 1.8) + 32
+                            current_temp = current_temp.round
+                            target_temp = (target_temp * 1.8) + 32
+                            target_temp = target_temp.round
+                        else
+                            current_temp = current_temp.to_f.round(1)
+                            target_temp =  target_temp.to_f.round(1)
+                        end
+                        
                         thermostat_name = statusResult["shared"][device_serial_id]["name"]
-                        say "The #{thermostat_name} Nest is currently set to #{target_temp} degrees. The current temperature is #{current_temp} degrees."
+                        
+                        ttt_string = get_time_to_target(statusResult, device_serial_id)
+                        if ttt_string
+                            say "The #{thermostat_name} Nest is currently set to #{target_temp}° and will reach it in " + ttt_string + ". The current temperature is #{current_temp}°" + temperature_scale + "."                           
+                        else
+                            say "The #{thermostat_name} Nest is currently set to #{target_temp}°. The current temperature is #{current_temp}°" + temperature_scale + "."                            
+                        end
                     end
                 else
                     say "Sorry, I couldn't understand the response from Nest.com"
@@ -144,13 +177,24 @@ class SiriProxy::Plugin::NestLearningThermostat < SiriProxy::Plugin
                     structure_id = statusResult["user"][user_id]["structures"][0].split('.')[1]
                     device_serial_id = statusResult["structure"][structure_id]["devices"][0].split('.')[1]
                     version_id = statusResult["shared"][device_serial_id]["$version"]
-                    current_temp = (statusResult["shared"][device_serial_id]["current_temperature"] * 1.8) + 32
-                    current_temp = current_temp.round
+                    
+                    
+                    current_temp = statusResult["shared"][device_serial_id]["current_temperature"]
+                    target_temp_celsius = temp
+                    temperature_scale = statusResult["device"][device_serial_id]["temperature_scale"]
+                    
+                    if temperature_scale == "F"
+                        current_temp = (current_temp * 1.8) + 32
+                        current_temp = current_temp.round
+                        target_temp_celsius = (temp.to_f - 32.0) / 1.8
+                        target_temp_celsius = target_temp_celsius.round(5)
+                    else
+                        current_temp = current_temp.to_f.round(1)
+                        target_temp_celsius = target_temp_celsius.to_f
+                    end
+                                        
                     thermostat_name = statusResult["shared"][device_serial_id]["name"]
-                    
-                    target_temp_celsius = (temp.to_f - 32.0) / 1.8
-                    target_temp_celsius = target_temp_celsius.round(5)
-                    
+                                        
                     payload = '{"target_change_pending":true,"target_temperature":' + "#{target_temp_celsius}" + '}'
                     puts payload
                     puts device_serial_id
@@ -158,16 +202,13 @@ class SiriProxy::Plugin::NestLearningThermostat < SiriProxy::Plugin
                     puts 'POST ' + transport_url + '/v2/put/shared.' + device_serial_id
                     begin
                         tempRequest = HTTParty.post(transport_url + '/v2/put/shared.' + device_serial_id, :body => payload, :headers => { 'Host' => transport_host, 'User-Agent' => 'Nest/1.1.0.10 C.10 CFNetwork/548.0.4', 'Authorization' => 'Basic ' + access_token, 'X-nl-protocol-version' => '1'})
+                        puts tempRequest.body                        
                     rescue
                         puts 'error: ' 
                     end
-                    
-                    puts "continuing"
-                    puts tempRequest.code
-                    puts tempRequest.body
-                    
+                                        
                     if tempRequest.code == 200
-                        say "Ok, I set the #{thermostat_name} Nest to #{temp} degrees. The current temperature is #{current_temp} degrees."                        
+                        say "Ok, I set the #{thermostat_name} Nest to #{temp}°. The current temperature is #{current_temp}°" + temperature_scale + "."                   
                     else
                         say "Sorry, I couldn't set the temperature on the Nest."
                     end                    
