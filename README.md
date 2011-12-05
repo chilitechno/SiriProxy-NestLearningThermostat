@@ -7,6 +7,10 @@ This plugin requires a nest.com account and Nest hardware from http://www.nest.c
 
 This plugin was adapted from SiriProxy-Thermostat plugin to call into nest.com.
 
+Important Note, this plugin is neither developed, nor endorsed by nest.com, do not contact them about problems or issues you encounter with this plugin. 
+
+If you're having problems with the plugin, open an issue on github.
+
 Config
 ------
 Copy config-info.yml into ~/.siriproxy/config.yml and edit as appropriate. 

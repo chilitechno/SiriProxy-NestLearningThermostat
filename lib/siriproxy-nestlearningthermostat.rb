@@ -86,7 +86,9 @@ class SiriProxy::Plugin::NestLearningThermostat < SiriProxy::Plugin
                         
                         current_temp = statusResult["shared"][device_serial_id]["current_temperature"]
                         target_temp = statusResult["shared"][device_serial_id]["target_temperature"]
-                        temperature_scale = statusResult["device"][device_serial_id]["temperature_scale"]
+                        
+                        current_humidity = statusResult["device"][device_serial_id]["current_humidity"] 
+                        temperature_scale = statusResult["device"][device_serial_id]["temperature_scale"]                        
                         
                         if temperature_scale == "F"
                             current_temp = (current_temp * 1.8) + 32
@@ -102,9 +104,9 @@ class SiriProxy::Plugin::NestLearningThermostat < SiriProxy::Plugin
                         
                         ttt_string = get_time_to_target(statusResult, device_serial_id)
                         if ttt_string
-                            say "The #{thermostat_name} Nest is currently set to #{target_temp}° and will reach it in " + ttt_string + ". The current temperature is #{current_temp}°" + temperature_scale + "."                           
+                            say "The #{thermostat_name} Nest is currently set to #{target_temp}° and will reach it in " + ttt_string + ". The current temperature is #{current_temp}°" + temperature_scale + " and the relative humidity is #{current_humidity}%."                           
                         else
-                            say "The #{thermostat_name} Nest is currently set to #{target_temp}°. The current temperature is #{current_temp}°" + temperature_scale + "."                            
+                            say "The #{thermostat_name} Nest is currently set to #{target_temp}°. The current temperature is #{current_temp}°" + temperature_scale + " and the relative humidity is #{current_humidity}%."                           
                         end
                     end
                 else
