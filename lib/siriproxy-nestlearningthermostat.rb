@@ -3,6 +3,9 @@
 require 'rubygems'
 require 'httparty'
 require 'json'
+require 'siri_objects'
+require 'pp'
+require 'cora'
 
 class SiriProxy::Plugin::NestLearningThermostat < SiriProxy::Plugin
     attr_accessor :nest_email
