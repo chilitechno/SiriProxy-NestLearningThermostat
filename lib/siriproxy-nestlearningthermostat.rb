@@ -34,6 +34,9 @@ class SiriProxy::Plugin::NestLearningThermostat < SiriProxy::Plugin
     listen_for(/thermostat.*warmer|nest.*warmer/i) { set_thermostat_warmer }
     listen_for(/thermostat.*cooler|nest.*cooler/i) { set_thermostat_cooler }
 
+    listen_for(/turn up thermostat|turn thermostat up/i) { set_thermostat_warmer }
+    listen_for(/turn down thermostat|turn thermostat down/i) { set_thermostat_cooler }
+
 
 def login_to_nest
         loginRequest = HTTParty.post('https://home.nest.com/user/login',:body => { :username => self.nest_email, :password => self.nest_password }, :headers => { 'User-Agent' => 'Nest/1.1.0.10 CFNetwork/548.0.4' })
