@@ -34,8 +34,8 @@ class SiriProxy::Plugin::NestLearningThermostat < SiriProxy::Plugin
     listen_for(/thermostat.*warmer|nest.*warmer/i) { set_thermostat_warmer }
     listen_for(/thermostat.*cooler|nest.*cooler/i) { set_thermostat_cooler }
 
-    listen_for(/up thermostat|thermostat up/i) { set_thermostat_warmer }
-    listen_for(/down thermostat|thermostat down/i) { set_thermostat_cooler }
+    listen_for(/turn up thermostat|turn thermostat up/i) { set_thermostat_warmer }
+    listen_for(/turn down thermostat|turn thermostat down/i) { set_thermostat_cooler }
 
 
 def login_to_nest
