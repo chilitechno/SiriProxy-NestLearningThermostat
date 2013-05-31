@@ -69,52 +69,49 @@ class SiriProxy::Plugin::NestLearningThermostat < SiriProxy::Plugin
     def show_status_of_thermostat
         say "Checking the status of the Nest."
         
-        Thread.new {
-            authResult = login_to_nest             
-            
+        Thread.new {            
+            authResult = login_to_nest                        
             if authResult   
                 access_token = authResult["access_token"]
                 user_id = authResult["userid"]
                 transport_url = authResult["urls"]["transport_url"]
-                transport_host = transport_url.split('/')[2]
                 
                 statusResult = get_nest_status(access_token, user_id, transport_url)
                 
                 if statusResult
                     structure_id = statusResult["user"][user_id]["structures"][0].split('.')[1]
-                    device_serial_id = statusResult["structure"][structure_id]["devices"][0].split('.')[1]
-                    version_id = statusResult["shared"][device_serial_id]["$version"]
-                    
-                    
-                    current_temp = statusResult["shared"][device_serial_id]["current_temperature"]
-                    target_temp_celsius = temp
-                    temperature_scale = statusResult["device"][device_serial_id]["temperature_scale"]
-                    
-                    if temperature_scale == "F"
-                        current_temp = (current_temp * 1.8) + 32
-                        current_temp = current_temp.round
-                        target_temp_celsius = (temp.to_f - 32.0) / 1.8
-                        target_temp_celsius = target_temp_celsius.round(5)
-                    else
-                        current_temp = current_temp.to_f.round(1)
-                        target_temp_celsius = target_temp_celsius.to_f
+                    if statusResult["structure"][structure_id]["away"]
+                        say "The Nest is currently set to away."
+                    else                    
+                        device_serial_id = statusResult["structure"][structure_id]["devices"][0].split('.')[1]
+                        # devices element could contain multiple serial_numbers if multiple thermostats associated to nest account. 
+                        # serial number is something like 01AB23CD456789EF
+                        
+                        current_temp = statusResult["shared"][device_serial_id]["current_temperature"]
+                        target_temp = statusResult["shared"][device_serial_id]["target_temperature"]
+                        
+                        current_humidity = statusResult["device"][device_serial_id]["current_humidity"] 
+                        temperature_scale = statusResult["device"][device_serial_id]["temperature_scale"]                        
+                        
+                        if temperature_scale == "F"
+                            current_temp = (current_temp * 1.8) + 32
+                            current_temp = current_temp.round
+                            target_temp = (target_temp * 1.8) + 32
+                            target_temp = target_temp.round
+                        else
+                            current_temp = current_temp.to_f.round(1)
+                            target_temp =  target_temp.to_f.round(1)
+                        end
+                        
+                        thermostat_name = statusResult["shared"][device_serial_id]["name"]
+                        
+                        ttt_string = get_time_to_target(statusResult, device_serial_id)
+                        if ttt_string
+                            say "The #{thermostat_name} Nest is currently set to #{target_temp}° and will reach it in " + ttt_string + ". The current temperature is #{current_temp}°" + temperature_scale + " and the relative humidity is #{current_humidity}%."                           
+                        else
+                            say "The #{thermostat_name} Nest is currently set to #{target_temp}°. The current temperature is #{current_temp}°" + temperature_scale + " and the relative humidity is #{current_humidity}%."                           
+                        end
                     end
-                                        
-                    thermostat_name = statusResult["shared"][device_serial_id]["name"]
-                                        
-                    #payload = '{"target_change_pending":true,"target_temperature":' + "#{target_temp_celsius}" + '}'
-                    #puts payload
-                    #puts device_serial_id
-                    #puts version_id
-                    #puts 'POST ' + transport_url + '/v2/put/shared.' + device_serial_id
-                    #begin
-                    #    tempRequest = HTTParty.post(transport_url + '/v2/put/shared.' + device_serial_id, :body => payload, :headers => { 'Host' => transport_host, 'User-Agent' => 'Nest/1.1.0.10 C.10 CFNetwork/548.0.4', 'Authorization' => 'Basic ' + access_token, 'X-nl-protocol-version' => '1'})
-                    #    puts tempRequest.body                        
-                    #rescue
-                    #    puts 'error: ' 
-                    #end
-                                        
-                    say "The #{thermostat_name} Nest is currently set to #{target_temp}°. The current temperature is #{current_temp}°" + temperature_scale + " and the relative humidity is #{current_humidity}%."
                 else
                     say "Sorry, I couldn't understand the response from Nest.com"
                 end
