@@ -31,7 +31,14 @@ class SiriProxy::Plugin::NestLearningThermostat < SiriProxy::Plugin
     listen_for(/thermostat.*([0-9]{2})/i) { |temp| set_thermostat(temp) }
     listen_for(/nest.*([0-9]{2})/i) { |temp| set_thermostat(temp) }
     
-    def login_to_nest
+    listen_for(/thermostat.*warmer|nest.*warmer/i) { set_thermostat_warmer }
+    listen_for(/thermostat.*cooler|nest.*cooler/i) { set_thermostat_cooler }
+
+    listen_for(/up.*thermostat|thermostat.*up/i) { set_thermostat_warmer }
+    listen_for(/down.*thermostat|thermostat.*down/i) { set_thermostat_cooler }
+
+
+def login_to_nest
         loginRequest = HTTParty.post('https://home.nest.com/user/login',:body => { :username => self.nest_email, :password => self.nest_password }, :headers => { 'User-Agent' => 'Nest/1.1.0.10 CFNetwork/548.0.4' })
                 
         authResult = JSON.parse(loginRequest.body) rescue nil
@@ -228,4 +235,130 @@ class SiriProxy::Plugin::NestLearningThermostat < SiriProxy::Plugin
         }    
     end
     
+    def set_thermostat_cooler
+        say "One moment while I lower the Nest temperature."        
+        Thread.new {
+            authResult = login_to_nest             
+            
+            if authResult   
+                access_token = authResult["access_token"]
+                user_id = authResult["userid"]
+                transport_url = authResult["urls"]["transport_url"]
+                transport_host = transport_url.split('/')[2]
+                
+                statusResult = get_nest_status(access_token, user_id, transport_url)
+                
+                if statusResult
+                    structure_id = statusResult["user"][user_id]["structures"][0].split('.')[1]
+                    device_serial_id = statusResult["structure"][structure_id]["devices"][0].split('.')[1]
+                    version_id = statusResult["shared"][device_serial_id]["$version"]
+                    
+                    
+                    current_temp = statusResult["shared"][device_serial_id]["current_temperature"]
+                    target_temp = statusResult["shared"][device_serial_id]["target_temperature"]
+                    temperature_scale = statusResult["device"][device_serial_id]["temperature_scale"]
+                    
+                    if temperature_scale == "F"
+                        target_temp = (target_temp * 1.8) + 32
+                        target_temp = target_temp.round
+                        target_temp_celsius = ((target_temp - 33.0) / 1.8)
+                        target_temp_celsius = target_temp_celsius.round(5)
+                    else
+                        target_temp = target_temp.to_f.round(1)
+                        target_temp_celsius = target_temp - 1
+                    end
+                                        
+                    thermostat_name = statusResult["shared"][device_serial_id]["name"]
+                                        
+                    payload = '{"target_change_pending":true,"target_temperature":' + "#{target_temp_celsius}" + '}'
+                    puts payload
+                    puts device_serial_id
+                    puts version_id
+                    puts 'POST ' + transport_url + '/v2/put/shared.' + device_serial_id
+                    begin
+                        tempRequest = HTTParty.post(transport_url + '/v2/put/shared.' + device_serial_id, :body => payload, :headers => { 'Host' => transport_host, 'User-Agent' => 'Nest/1.1.0.10 C.10 CFNetwork/548.0.4', 'Authorization' => 'Basic ' + access_token, 'X-nl-protocol-version' => '1'})
+                        puts tempRequest.body                        
+                    rescue
+                        puts 'error: ' 
+                    end
+                                        
+                    #if tempRequest.code
+                        say "Ok, I set the #{thermostat_name} Nest to #{temp}°. The current temperature is #{current_temp}°" + temperature_scale + "."                   
+                    #else
+                    #    say "Sorry, I couldn't set the temperature on the Nest."
+                    #end                    
+                else
+                    say "Sorry, I couldn't understand the response from Nest.com"
+                end
+            else
+                say "Sorry, I couldn't connect to Nest.com."
+            end
+            
+            request_completed #always complete your request! Otherwise the phone will "spin" at the user!
+        }    
+    end
+
+    def set_thermostat_warmer
+        say "One moment while I raise the Nest temperature."        
+        Thread.new {
+            authResult = login_to_nest             
+            
+            if authResult   
+                access_token = authResult["access_token"]
+                user_id = authResult["userid"]
+                transport_url = authResult["urls"]["transport_url"]
+                transport_host = transport_url.split('/')[2]
+                
+                statusResult = get_nest_status(access_token, user_id, transport_url)
+                
+                if statusResult
+                    structure_id = statusResult["user"][user_id]["structures"][0].split('.')[1]
+                    device_serial_id = statusResult["structure"][structure_id]["devices"][0].split('.')[1]
+                    version_id = statusResult["shared"][device_serial_id]["$version"]
+                    
+                    
+                    current_temp = statusResult["shared"][device_serial_id]["current_temperature"]
+                    target_temp = statusResult["shared"][device_serial_id]["target_temperature"]
+                    temperature_scale = statusResult["device"][device_serial_id]["temperature_scale"]
+                    
+                    if temperature_scale == "F"
+                        target_temp = (target_temp * 1.8) + 32
+                        target_temp = target_temp.round
+                        target_temp_celsius = ((target_temp - 31.0) / 1.8)
+                        target_temp_celsius = target_temp_celsius.round(5)
+                    else
+                        target_temp = target_temp.to_f.round(1)
+                        target_temp_celsius = target_temp + 1
+                    end
+                                        
+                    thermostat_name = statusResult["shared"][device_serial_id]["name"]
+                                        
+                    payload = '{"target_change_pending":true,"target_temperature":' + "#{target_temp_celsius}" + '}'
+                    puts payload
+                    puts device_serial_id
+                    puts version_id
+                    puts 'POST ' + transport_url + '/v2/put/shared.' + device_serial_id
+                    begin
+                        tempRequest = HTTParty.post(transport_url + '/v2/put/shared.' + device_serial_id, :body => payload, :headers => { 'Host' => transport_host, 'User-Agent' => 'Nest/1.1.0.10 C.10 CFNetwork/548.0.4', 'Authorization' => 'Basic ' + access_token, 'X-nl-protocol-version' => '1'})
+                        puts tempRequest.body                        
+                    rescue
+                        puts 'error: ' 
+                    end
+                                        
+                    #if tempRequest.code
+                        say "Ok, I set the #{thermostat_name} Nest to #{temp}°. The current temperature is #{current_temp}°" + temperature_scale + "."                   
+                    #else
+                    #    say "Sorry, I couldn't set the temperature on the Nest."
+                    #end                    
+                else
+                    say "Sorry, I couldn't understand the response from Nest.com"
+                end
+            else
+                say "Sorry, I couldn't connect to Nest.com."
+            end
+            
+            request_completed #always complete your request! Otherwise the phone will "spin" at the user!
+        }    
+    end
+
 end
