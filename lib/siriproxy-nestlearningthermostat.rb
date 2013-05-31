@@ -258,11 +258,11 @@ def login_to_nest
                     if temperature_scale == "F"
                         target_temp = (target_temp * 1.8) + 32
                         target_temp = target_temp.round
-                        target_temp_celsius = ((current_temp - 33.0) / 1.8)
+                        target_temp_celsius = ((target_temp - 33.0) / 1.8)
                         target_temp_celsius = target_temp_celsius.round(5)
                     else
                         target_temp = target_temp.to_f.round(1)
-                        target_temp_celsius = current_temp - 1
+                        target_temp_celsius = target_temp - 1
                     end
                                         
                     thermostat_name = statusResult["shared"][device_serial_id]["name"]
@@ -321,11 +321,11 @@ def login_to_nest
                     if temperature_scale == "F"
                         target_temp = (target_temp * 1.8) + 32
                         target_temp = target_temp.round
-                        target_temp_celsius = ((current_temp - 31.0) / 1.8)
+                        target_temp_celsius = ((target_temp - 31.0) / 1.8)
                         target_temp_celsius = target_temp_celsius.round(5)
                     else
                         target_temp = target_temp.to_f.round(1)
-                        target_temp_celsius = current_temp + 1
+                        target_temp_celsius = target_temp + 1
                     end
                                         
                     thermostat_name = statusResult["shared"][device_serial_id]["name"]
