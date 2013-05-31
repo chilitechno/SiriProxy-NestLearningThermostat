@@ -258,7 +258,7 @@ def login_to_nest
                     if temperature_scale == "F"
                         current_temp = (current_temp * 1.8) + 32
                         current_temp = current_temp.round
-                        target_temp_celsius = (current_temp - 1 - 32.0) / 1.8
+                        target_temp_celsius = ((current_temp - 32.0) / 1.8) -1
                         target_temp_celsius = target_temp_celsius.round(5)
                     else
                         current_temp = current_temp.to_f.round(1)
@@ -321,7 +321,7 @@ def login_to_nest
                     if temperature_scale == "F"
                         current_temp = (current_temp * 1.8) + 32
                         current_temp = current_temp.round
-                        target_temp_celsius = (current_temp + 1 - 32.0) / 1.8
+                        target_temp_celsius = ((current_temp - 32.0) / 1.8) + 1
                         target_temp_celsius = target_temp_celsius.round(5)
                     else
                         current_temp = current_temp.to_f.round(1)
