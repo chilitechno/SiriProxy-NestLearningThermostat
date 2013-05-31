@@ -282,11 +282,11 @@ def login_to_nest
                         puts 'error: ' 
                     end
                                         
-                    if tempRequest.code
+                    #if tempRequest.code
                         say "Ok, I set the #{thermostat_name} Nest to #{temp}°. The current temperature is #{current_temp}°" + temperature_scale + "."                   
-                    else
-                        say "Sorry, I couldn't set the temperature on the Nest."
-                    end                    
+                    #else
+                    #    say "Sorry, I couldn't set the temperature on the Nest."
+                    #end                    
                 else
                     say "Sorry, I couldn't understand the response from Nest.com"
                 end
@@ -345,11 +345,11 @@ def login_to_nest
                         puts 'error: ' 
                     end
                                         
-                    if tempRequest.code
+                    #if tempRequest.code
                         say "Ok, I set the #{thermostat_name} Nest to #{temp}°. The current temperature is #{current_temp}°" + temperature_scale + "."                   
-                    else
-                        say "Sorry, I couldn't set the temperature on the Nest."
-                    end                    
+                    #else
+                    #    say "Sorry, I couldn't set the temperature on the Nest."
+                    #end                    
                 else
                     say "Sorry, I couldn't understand the response from Nest.com"
                 end
