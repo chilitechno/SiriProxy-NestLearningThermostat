@@ -296,7 +296,7 @@ def login_to_nest
     end
 
     def set_thermostat_warmer
-        say "One moment while I lower the Nest temperature."        
+        say "One moment while I raise the Nest temperature."        
         Thread.new {
             authResult = login_to_nest             
             
