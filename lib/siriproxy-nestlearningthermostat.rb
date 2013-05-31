@@ -252,16 +252,16 @@ def login_to_nest
                     
                     
                     current_temp = statusResult["shared"][device_serial_id]["current_temperature"]
-                    #target_temp_celsius = temp
+                    target_temp = statusResult["shared"][device_serial_id]["target_temperature"]
                     temperature_scale = statusResult["device"][device_serial_id]["temperature_scale"]
                     
                     if temperature_scale == "F"
-                        current_temp = (current_temp * 1.8) + 32
-                        current_temp = current_temp.round
+                        target_temp = (target_temp * 1.8) + 32
+                        target_temp = target_temp.round
                         target_temp_celsius = ((current_temp - 33.0) / 1.8)
                         target_temp_celsius = target_temp_celsius.round(5)
                     else
-                        current_temp = current_temp.to_f.round(1)
+                        target_temp = target_temp.to_f.round(1)
                         target_temp_celsius = current_temp - 1
                     end
                                         
@@ -315,16 +315,16 @@ def login_to_nest
                     
                     
                     current_temp = statusResult["shared"][device_serial_id]["current_temperature"]
-                    #target_temp_celsius = temp
+                    target_temp = statusResult["shared"][device_serial_id]["target_temperature"]
                     temperature_scale = statusResult["device"][device_serial_id]["temperature_scale"]
                     
                     if temperature_scale == "F"
-                        current_temp = (current_temp * 1.8) + 32
-                        current_temp = current_temp.round
-                        target_temp_celsius = (current_temp - 31.0) / 1.8
+                        target_temp = (target_temp * 1.8) + 32
+                        target_temp = target_temp.round
+                        target_temp_celsius = ((current_temp - 31.0) / 1.8)
                         target_temp_celsius = target_temp_celsius.round(5)
                     else
-                        current_temp = current_temp.to_f.round(1)
+                        target_temp = target_temp.to_f.round(1)
                         target_temp_celsius = current_temp + 1
                     end
                                         
