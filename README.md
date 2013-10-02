@@ -5,6 +5,8 @@ About
 Plugin for SiriProxy to communicate with the Nest.com servers to set thermostat temperature or get the status of the thermostat.
 This plugin requires a nest.com account and Nest hardware from http://www.nest.com/
 
+Now supports multiple thermostats by name as well as setting the mode of the thermostat.
+
 This plugin was adapted from SiriProxy-Thermostat plugin to call into nest.com.
 
 Important Note, this plugin is neither developed, nor endorsed by nest.com, do not contact them about problems or issues you encounter with this plugin. 
@@ -20,12 +22,16 @@ Usage
 Say things like:
 
 * 'Set the thermostat to 65 degrees'
+* 'Set the downstairs thermostat to 77 degrees'
 * 'Set the nest to 65'
 * 'What's the status of the nest'
 * 'What is the status of the thermostat'
 * 'Set the nest to away'
 * 'Set the thermostat to away'
 * 'Let the nest know that I'm home'
+* 'Set the thermostat mode to heat'
+* 'Set the thermostat mode to cool'
+* 'Set the nest mode to range'
 
 Background
 ----------
@@ -44,7 +50,6 @@ Examples
 
 Caveats
 -------
-* Currently only works with a single nest thermostat. I don't have multiple thermostats installed so it's hard to test, but should be relatively easy to adapt.
 * I tried getting Siri to understand 'Check the status of the Nest' but it kept saying it couldn't look up flight information. This seems to be sporadic because sometimes Siri reads 'Nest' as 'next'
 * I developed this on my home HVAC system which only has single-stage heating (Rc, W) so your mileage may vary if you have a different setup and you'll likely need to further analyze the nest iPhone app request/response stream.
 
@@ -52,7 +57,6 @@ To Do
 -----
 * Caching of authentication token (currently logs into nest for each request)
 * Caching of device information 
-* Support heat / cooling
 
 Licensing
 ---------
